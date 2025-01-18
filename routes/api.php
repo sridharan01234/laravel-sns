@@ -34,3 +34,7 @@ use App\Http\Controllers\Api\CampaignController;
     });
 
     Route::get('/customers', [CustomerController::class, 'apiIndex']);
+
+    Route::post('/campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate']);
+Route::post('/campaigns/{campaign}/resend', [CampaignController::class, 'resend']);
+

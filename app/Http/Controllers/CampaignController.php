@@ -147,4 +147,31 @@ class CampaignController extends Controller
             ], 500);
         }
     }
+
+    public function duplicate(Campaign $campaign)
+{
+    $newCampaign = $campaign->replicate();
+    $newCampaign->name = $campaign->name . ' (Copy)';
+    $newCampaign->status = 'draft';
+    $newCampaign->scheduled_at = null;
+    $newCampaign->save();
+
+    // Copy the campaign groups
+    $newCampaign->groups()->attach($campaign->groups->pluck('id'));
+
+    return response()->json($newCampaign->load('groups'));
+}
+
+public function resend(Campaign $campaign)
+{
+    $newCampaign = $campaign->replicate();
+    $newCampaign->status = 'scheduled';
+    $newCampaign->scheduled_at = now();
+    $newCampaign->save();
+
+    // Copy the campaign groups
+    $newCampaign->groups()->attach($campaign->groups->pluck('id'));
+
+    return response()->json(['message' => 'Campaign scheduled for resend']);
+}
 }

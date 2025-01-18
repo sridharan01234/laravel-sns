@@ -17,14 +17,17 @@ use Aws\Sns\SnsClient;
 class SendMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
     protected $message;
     protected $sns;
+    protected $topicArn;
 
     public function __construct(Message $message)
     {
-        $this->message = Message::where('id', $message->id)->first();
-        
+        $this->message = $message;
+    }
+
+    public function handle()
+    {
         $this->sns = new SnsClient([
             'version' => 'latest',
             'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
@@ -32,46 +35,28 @@ class SendMessage implements ShouldQueue
                 'key'    => env('AWS_ACCESS_KEY_ID'),
                 'secret' => env('AWS_SECRET_ACCESS_KEY'),
             ],
+            'http' => [
+                'verify' => false
+            ]
         ]);
-    }
 
-    public function handle()
-    {
         try {
-            // Refresh the model to ensure we have the latest data
-            $this->message = Message::where('id', $this->message->id)->first();
-    
-            if (!$this->message->campaign_id) {
-                throw new \Exception('No campaign ID assigned to message ID: ' . $this->message->id);
-            }
-    
-            // Get campaign without relation
-            $campaign = Campaign::where('id', $this->message->campaign_id)->first();
-            if (!$campaign) {
-                throw new \Exception('Campaign not found for message ID: ' . $this->message->id);
-            }
+            // Create or get existing topic
+            $topicArn = $this->createOrGetTopic();
 
-            // Get template without relation
-            $template = Template::where('id', $campaign->template_id)->first();            
-            if (!$template) {
-                throw new \Exception('Template not found for campaign ID: ' . $campaign->id);
-            }
-            
-            // Get customer without relation
-            $customer = Customer::where('id', $this->message->customer_id)->first();
-            if (!$customer) {
-                throw new \Exception('Customer not found for message ID: ' . $this->message->id);
-            }
+            // Get campaign and template data
+            $campaign = Campaign::findOrFail($this->message->campaign_id);
+            $template = Template::findOrFail($campaign->template_id);
+            $customer = Customer::findOrFail($this->message->customer_id);
 
-            // Prepare variables
+            // Subscribe customer to topic
+            $this->subscribeToTopic($topicArn, $customer->mobile);
+
+            // Prepare and send message
             $variables = $this->prepareMessageVariables($customer, $template);
+            $messageText = $this->formatMessage($template, $variables);
 
-            // Send the message via SNS
-            $response = $this->sendViaSNS($customer->mobile, $template, $variables);
-
-            if (!$response['success']) {
-                throw new \Exception($response['error']);
-            }
+            $response = $this->publishToTopic($topicArn, $messageText);
 
             // Update message status
             $this->message->update([
@@ -82,12 +67,9 @@ class SendMessage implements ShouldQueue
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Message Sending Failed: ' . $e->getMessage(), [
+            Log::error('SMS Campaign Failed', [
                 'message_id' => $this->message->id,
-                'customer_id' => $this->message->customer_id ?? null,
-                'campaign_id' => $this->message->campaign_id ?? null,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
 
             $this->message->update([
@@ -99,50 +81,125 @@ class SendMessage implements ShouldQueue
         }
     }
 
-    protected function sendViaSNS($phoneNumber, $template, $variables)
+    protected function createOrGetTopic()
     {
         try {
-            // Format the message using template and variables
-            $messageText = $this->formatMessage($template, $variables);
+            // Create unique topic name based on campaign
+            $topicName = 'campaign-' . $this->message->campaign_id;
 
-            // Ensure phone number is in E.164 format
-            $formattedPhoneNumber = $this->formatPhoneNumber($phoneNumber);
-
-            // Send SMS via SNS
-            $result = $this->sns->publish([
-                'Message' => $messageText,
-                'PhoneNumber' => $formattedPhoneNumber,
-                'MessageAttributes' => [
-                    'AWS.SNS.SMS.SMSType' => [
-                        'DataType' => 'String',
-                        'StringValue' => 'Transactional' // Use 'Promotional' for marketing messages
-                    ],
-                    'AWS.SNS.SMS.SenderID' => [
-                        'DataType' => 'String',
-                        'StringValue' => env('AWS_SNS_SENDER_ID', 'MYSENDER')
+            $result = $this->sns->createTopic([
+                'Name' => $topicName,
+                'Tags' => [
+                    [
+                        'Key' => 'campaign_id',
+                        'Value' => (string)$this->message->campaign_id
                     ]
                 ]
             ]);
 
-            return [
-                'success' => true,
-                'message_id' => $result['MessageId'] ?? null,
-                'sent_at' => now(),
-                'provider' => 'aws-sns'
-            ];
+            Log::info('SNS Topic Created', [
+                'topic_arn' => $result['TopicArn'],
+                'campaign_id' => $this->message->campaign_id
+            ]);
+
+            return $result['TopicArn'];
 
         } catch (\Exception $e) {
-            Log::error('SNS Sending Failed: ' . $e->getMessage(), [
-                'phone' => $phoneNumber,
+            Log::error('Failed to create SNS topic', [
+                'campaign_id' => $this->message->campaign_id,
                 'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    protected function subscribeToTopic($topicArn, $phoneNumber)
+    {
+        try {
+            $formattedPhoneNumber = $this->formatPhoneNumber($phoneNumber);
+
+            $result = $this->sns->subscribe([
+                'TopicArn' => $topicArn,
+                'Protocol' => 'sms',
+                'Endpoint' => $formattedPhoneNumber,
+                'ReturnSubscriptionArn' => true
+            ]);
+
+            Log::info('Phone Subscribed to Topic', [
+                'phone' => $formattedPhoneNumber,
+                'topic_arn' => $topicArn,
+                'subscription_arn' => $result['SubscriptionArn']
+            ]);
+
+            return $result['SubscriptionArn'];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to subscribe to topic', [
+                'phone' => $phoneNumber,
+                'topic_arn' => $topicArn,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    protected function publishToTopic($topicArn, $messageText)
+    {
+        try {
+            $result = $this->sns->publish([
+                'TopicArn' => $topicArn,
+                'Message' => $messageText,
+                'MessageAttributes' => [
+                    'SMSType' => [
+                        'DataType' => 'String',
+                        'StringValue' => 'Transactional'
+                    ]
+                ]
+            ]);
+
+            Log::info('Message Published to Topic', [
+                'topic_arn' => $topicArn,
+                'message_id' => $result['MessageId'],
+                'message_preview' => substr($messageText, 0, 50)
             ]);
 
             return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'provider' => 'aws-sns'
+                'success' => true,
+                'message_id' => $result['MessageId'],
+                'sent_at' => now(),
+                'provider' => 'aws-sns-topic'
             ];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to publish to topic', [
+                'topic_arn' => $topicArn,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
+    }
+
+    protected function formatPhoneNumber($phoneNumber)
+    {
+        // Remove any non-numeric characters
+        $number = preg_replace('/[^0-9]/', '', $phoneNumber);
+        
+        // If number starts with 0, remove it
+        $number = ltrim($number, '0');
+        
+        // Add India country code (+91) if not present
+        if (strlen($number) === 10) {
+            $number = '+91' . $number;
+        } else {
+            // If number doesn't have country code, add it
+            if (strpos($number, '91') !== 0) {
+                $number = '+91' . $number;
+            } else {
+                $number = '+' . $number;
+            }
+        }
+        
+        return $number;
     }
 
     protected function formatMessage($template, $variables)
@@ -152,19 +209,6 @@ class SendMessage implements ShouldQueue
             $messageText = str_replace('{' . $key . '}', $value, $messageText);
         }
         return $messageText;
-    }
-
-    protected function formatPhoneNumber($phoneNumber)
-    {
-        // Remove any non-numeric characters
-        $cleaned = preg_replace('/[^0-9]/', '', $phoneNumber);
-        
-        // Add + prefix if not present
-        if (substr($cleaned, 0, 1) !== '+') {
-            $cleaned = '+' . $cleaned;
-        }
-        
-        return $cleaned;
     }
 
     protected function prepareMessageVariables($customer, $template)
