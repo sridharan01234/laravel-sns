@@ -59,9 +59,11 @@
                 <div>
                     <label class="text-sm text-gray-500">Variables:</label>
                     <div class="flex flex-wrap gap-2 mt-1">
+                        @if($template->variables)
                         @foreach($template->variables as $variable)
                         <span class="px-2 py-1 bg-gray-100 rounded text-xs">{{ $variable }}</span>
                         @endforeach
+                        @endif
                     </div>
                 </div>
             </div>

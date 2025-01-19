@@ -47,7 +47,7 @@ class ProcessCampaign implements ShouldQueue
                 ]);
 
                 // Dispatch SendMessage job
-                SendMessage::dispatch($message, 'sns');
+                SendMessage::dispatch($message, 'aws');
             }
 
             // Update campaign status

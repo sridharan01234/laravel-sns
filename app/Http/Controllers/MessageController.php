@@ -31,7 +31,8 @@ class MessageController extends Controller
             'groups' => Group::withCount('customers')->get(),
             'active_campaigns' => Campaign::whereIn('status', ['scheduled', 'running'])
                 ->with('template')
-                ->get()
+                ->get(),
+                'campaigns' => Campaign::with('template')->get()
         ];
 
         return view('dashboard.index', $data);
@@ -107,6 +108,8 @@ class MessageController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('messages.index', compact('messages'));
+            $campaigns = Campaign::with('template')->get();
+
+        return view('messages.index', compact(['messages', 'campaigns']));
     }
 }

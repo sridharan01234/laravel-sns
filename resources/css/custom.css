@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+}
+
+h1 {
+    @apply leading-tight tracking-tight;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Enhanced Table Styles */
+table {
+    @apply w-full;
+}
+
+thead {
+    @apply bg-gray-50;
+}
+
+th {
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 text-left;
+}
+
+tbody tr {
+    @apply hover:bg-gray-50 transition-all duration-200;
+}
+
+td {
+    @apply px-6 py-4 whitespace-nowrap text-sm;
+}
+
+/* Enhanced Card Styles */
+.card {
+    @apply relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden;
+}
+
+.card:hover {
+    @apply transform translate-y-[-2px];
+}
+
+/* Enhanced Button Styles with Hover Effects */
+.btn-primary {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200;
+}
+
+.btn-primary:hover {
+    @apply transform -translate-y-0.5 shadow-md;
+}
+
+.btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200;
+}
+
+.btn-secondary:hover {
+    @apply transform -translate-y-0.5 shadow-md border-gray-400;
+}
+
+/* Enhanced Form Styles with Focus Effects */
+.form-input {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all duration-200;
+}
+
+.form-input:focus {
+    @apply transform scale-[1.01] shadow-md;
+}
+
+/* Form group hover effect */
+.form-group:hover .form-label {
+    @apply text-indigo-600;
+}
+
+.form-group:hover .form-input {
+    @apply border-indigo-300;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.nav-link {
+    @apply inline-flex items-center px-3 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all duration-200;
+}
+
+.nav-link.active {
+    @apply border-indigo-500 text-gray-900 font-semibold;
+}
+
+.nav-link:hover {
+    @apply transform translate-y-[-1px];
+}
+
+.btn-primary {
+    @apply bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200;
+}
+
+.btn-secondary {
+    @apply bg-white text-gray-700 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200;
+}
+
+.card {
+    @apply bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100;
+}
+
+.card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+}
+
+.card-body {
+    @apply px-6 py-4;
+}
+
+.form-input {
+    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-200;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800 ring-2 ring-green-100 ring-opacity-50;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800 ring-2 ring-yellow-100 ring-opacity-50;
+}
+
+.badge-error {
+    @apply bg-red-100 text-red-800 ring-2 ring-red-100 ring-opacity-50;
+}
+
+.badge-info {
+    @apply bg-blue-100 text-blue-800 ring-2 ring-blue-100 ring-opacity-50;
+}
+
+/* Table Styles with hover effects */
+table {
+    @apply w-full;
+}
+
+tbody tr {
+    @apply transition-colors duration-200;
+}
+
+tbody tr:hover {
+    @apply bg-gray-50;
+}
+
+tbody tr:hover td {
+    @apply text-gray-900;
+}
+
+td {
+    @apply transition-colors duration-200;
+}
+
+/* Modal Styles with animations */
+.modal {
+    @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full transition-opacity duration-300;
+}
+
+.modal-content {
+    @apply relative top-20 mx-auto p-5 border w-full max-w-md shadow-xl rounded-lg bg-white transition-all duration-300 transform;
+}
+
+/* Animation Classes */
+.animate-fade-in {
+    @apply transition-opacity duration-200 ease-in-out;
+}
+
+.animate-slide-up {
+    @apply transition-transform duration-200 ease-in-out transform;
+}
+
+.animate-scale {
+    @apply transition-transform duration-200 ease-in-out transform hover:scale-105;
+}
+
+/* Enhanced card header with gradient */
+.card-header {
+    @apply px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white;
+}
+
+/* Card hover effect refinements */
+.card {
+    @apply transform-gpu transition-all duration-300 ease-in-out hover:shadow-lg;
+}
+
+.card:hover .card-header {
+    @apply bg-gradient-to-r from-indigo-50 to-white;
+}
+
+.card:hover .text-gray-500 {
+    @apply text-gray-700;
+}
+
+/* Stat card specific hover effects */
+.stat-card:hover .stat-icon {
+    @apply scale-110 rotate-12;
+}
+
+.stat-card:hover .stat-number {
+    @apply scale-105;
+}
+
+/* Statistics number enhancement */
+.stat-number {
+    @apply text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r;
+}
+
+.stat-number-primary {
+    @apply from-indigo-600 to-indigo-500;
+}
+
+.stat-number-success {
+    @apply from-green-600 to-green-500;
+}
+
+.stat-number-warning {
+    @apply from-yellow-600 to-yellow-500;
+}
+
+.stat-number-info {
+    @apply from-blue-600 to-blue-500;
+}
