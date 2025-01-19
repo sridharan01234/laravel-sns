@@ -11,6 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Aws\Sns\SnsClient;
 use Illuminate\Support\Facades\Http;
+use Twilio\Rest\Client as TwilioClient;
 
 class SendMessage implements ShouldQueue
 {
@@ -22,6 +23,9 @@ class SendMessage implements ShouldQueue
     public function __construct(Message $message, $provider = 'aws')
     {
         $this->message = $message;
+        if (!in_array($provider, ['aws', '2factor', 'twilio'])) {
+            throw new \InvalidArgumentException('Invalid provider specified');
+        }
         $this->provider = $provider;
     }
 
@@ -41,9 +45,12 @@ class SendMessage implements ShouldQueue
             $messageText = $this->prepareMessageText($template->content, $customer);
 
             // Send based on provider
-            $result = $this->provider === 'aws' 
-                ? $this->sendViaSNS($formattedPhone, $messageText)
-                : $this->sendVia2Factor($formattedPhone, $messageText);
+            $result = match($this->provider) {
+                'aws' => $this->sendViaSNS($formattedPhone, $messageText),
+                '2factor' => $this->sendVia2Factor($formattedPhone, $messageText),
+                'twilio' => $this->sendViaTwilio($formattedPhone, $messageText),
+                default => throw new \Exception('Invalid provider specified'),
+            };
 
             $this->updateMessageStatus('sent', $result);
             
@@ -165,6 +172,48 @@ class SendMessage implements ShouldQueue
         }
     }
     
+    protected function sendViaTwilio($phone, $message)
+    {
+        try {
+            $accountSid = env('TWILIO_ACCOUNT_SID');
+            $authToken = env('TWILIO_AUTH_TOKEN');
+            $twilioNumber = env('TWILIO_FROM_NUMBER');
+
+            if (!$accountSid || !$authToken || !$twilioNumber) {
+                throw new \Exception('Twilio credentials not properly configured');
+            }
+
+            $client = new TwilioClient($accountSid, $authToken);
+
+            $response = $client->messages->create(
+                $phone,
+                [
+                    'from' => $twilioNumber,
+                    'body' => $message
+                ]
+            );
+
+            Log::debug('Twilio message sent', [
+                'to' => $phone,
+                'sid' => $response->sid,
+                'status' => $response->status
+            ]);
+
+            return [
+                'provider' => 'twilio',
+                'message_id' => $response->sid,
+                'status' => $response->status
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Twilio API request failed', [
+                'error' => $e->getMessage(),
+                'to' => $phone
+            ]);
+            
+            throw $e;
+        }
+    }
 
     protected function updateMessageStatus($status, $result)
     {
