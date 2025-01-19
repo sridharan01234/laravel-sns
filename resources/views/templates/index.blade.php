@@ -121,7 +121,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="templateStatus" class="mt-1 block w-full rounded-md border-gray-300">
+                    <select id="templateStatus" class="form-input">
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
                     </select>
@@ -288,7 +288,7 @@ function previewTemplate(id) {
                 <div>
                     <label class="block text-sm text-secondary-600">${variable}</label>
                     <input type="text" 
-                           class="preview-variable mt-1 block w-full rounded-md border-gray-300" 
+                           class="preview-variable form-input" 
                            data-variable="${variable}" 
                            oninput="updatePreview()">
                 </div>

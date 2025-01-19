@@ -15,40 +15,50 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::get('/', [DashboardController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+// Authentication routes
+require __DIR__.'/auth.php';
 
 // Protected routes
 // Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
 // Group routes
 Route::resource('groups', GroupController::class);
 
 // Campaign routes
-Route::resource('campaigns', CampaignController::class);
+Route::resource('campaigns', CampaignController::class)->middleware('auth');
 Route::post('campaigns/{campaign}/execute', [CampaignController::class, 'execute'])
-    ->name('campaigns.execute');
+    ->name('campaigns.execute')
+    ->middleware('auth');
 
 // Message routes
-Route::controller(MessageController::class)->group(function () {
+Route::middleware('auth')->controller(MessageController::class)->group(function () {
     Route::get('messages', 'index')->name('messages.index');
     Route::post('messages/send', 'send')->name('messages.send');
 });
 
-Route::resource('groups', GroupController::class);
-Route::post('groups/{group}/add-customers', [GroupController::class, 'addCustomers'])
-    ->name('groups.add-customers');
-Route::get('groups/{group}/customers', [GroupController::class, 'customers'])
-    ->name('groups.customers');
-Route::delete('groups/{group}/remove-customer/{customer}', [GroupController::class, 'removeCustomer'])
-    ->name('groups.remove-customer');
+Route::middleware('auth')->group(function () {
+    Route::resource('groups', GroupController::class);
+    Route::post('groups/{group}/add-customers', [GroupController::class, 'addCustomers'])
+        ->name('groups.add-customers');
+    Route::get('groups/{group}/customers', [GroupController::class, 'customers'])
+        ->name('groups.customers');
+    Route::delete('groups/{group}/remove-customer/{customer}', [GroupController::class, 'removeCustomer'])
+        ->name('groups.remove-customer');
+});
 
-Route::resource('templates', TemplateController::class);
+Route::resource('templates', TemplateController::class)->middleware('auth');
 Route::post('templates/{template}/toggle-status', [TemplateController::class, 'toggleStatus'])
-    ->name('templates.toggle-status');
+    ->name('templates.toggle-status')
+    ->middleware('auth');
 
 // Customer routes
-Route::controller(CustomerController::class)
+Route::middleware('auth')
+    ->controller(CustomerController::class)
     ->prefix('customers')
     ->name('customers.')
     ->group(function () {
@@ -76,7 +86,7 @@ Route::controller(CustomerController::class)
         Route::delete('{customer}', 'destroy')->name('destroy');
     });
 
-Route::prefix('api')->group(function () {
+Route::middleware('auth')->prefix('api')->group(function () {
     // Group API endpoints
     Route::apiResource('groups', GroupController::class);
 

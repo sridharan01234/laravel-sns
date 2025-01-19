@@ -12,7 +12,7 @@
     <div class="flex justify-between items-center mb-6">
         <div class="flex space-x-4">
             <button onclick="openCustomerModal()" 
-                    class="btn-primary animate-scale group">
+                    class="btn btn btn-primary animate-scale group">
                 <svg class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" 
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -20,7 +20,7 @@
                 Add Customer
             </button>
             <button onclick="openImportModal()" 
-                    class="btn-success btn animate-scale group">
+                    class="btn btn btn-success btn animate-scale group">
                 <svg class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" 
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -29,7 +29,7 @@
                 Import Customers
             </button>
             <button onclick="exportCustomers()" 
-                    class="btn-secondary animate-scale group">
+                    class="btn btn btn-secondary animate-scale group">
                 <svg class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" 
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -92,7 +92,7 @@
 
                 <!-- Filter Button -->
                 <div class="flex items-end">
-                    <button type="submit" class="btn-primary w-full">
+                    <button type="submit" class="btn btn btn-primary w-full">
                         Filter Customers
                     </button>
                 </div>
@@ -202,19 +202,19 @@
             </div>
             <div class="flex space-x-4">
                 <button onclick="bulkUpdateGroup()" 
-                        class="btn-secondary btn animate-scale">
+                        class="btn btn-secondary btn animate-scale">
                     Update Group
                 </button>
                 <button onclick="bulkUpdateStatus(true)" 
-                        class="btn-success btn animate-scale">
+                        class="btn btn-success btn animate-scale">
                     Set Active
                 </button>
                 <button onclick="bulkUpdateStatus(false)" 
-                        class="btn-warning btn animate-scale">
+                        class="btn btn-warning btn animate-scale">
                     Set Inactive
                 </button>
                 <button onclick="confirmBulkDelete()" 
-                        class="btn-danger btn animate-scale">
+                        class="btn btn-danger btn animate-scale">
                     Delete Selected
                 </button>
             </div>
@@ -267,10 +267,10 @@
             </div>
             <div class="flex justify-end space-x-3 pt-4">
                 <button type="button" onclick="closeCustomerModal()" 
-                        class="btn-secondary">
+                        class="btn btn-secondary">
                     Cancel
                 </button>
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn btn-primary">
                     Save Customer
                 </button>
             </div>
@@ -307,10 +307,10 @@
             </div>
             <div class="flex justify-end space-x-3 pt-4">
                 <button type="button" onclick="closeImportModal()" 
-                        class="btn-secondary">
+                        class="btn btn-secondary">
                     Cancel
                 </button>
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn btn-primary">
                     Import Customers
                 </button>
             </div>
@@ -354,17 +354,19 @@ function saveCustomer(event) {
     })
     .then(response => {
     if (!response.ok) {
+        window.location.reload();
         return response.json().then(err => Promise.reject(err));
+        
     }
     return response.json();
 })
 .then(data => {
     if (data.success) {
         showSuccessMessage(data.message || 'Customer saved successfully');
-        closeCustomerModal();
         window.location.reload();
     } else {
         showErrorMessage(data.message || 'Failed to save customer');
+        window.location.reload();
     }
 })
 .catch(error => {

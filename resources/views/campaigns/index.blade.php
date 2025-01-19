@@ -11,7 +11,7 @@
     <!-- Action Buttons & Stats -->
     <div class="flex justify-between items-center mb-6">
         <button onclick="openCampaignModal()" 
-                class="btn-primary animate-scale group">
+                class="btn btn-primary animate-scale group">
             <svg class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -114,7 +114,7 @@
                 @if(in_array($campaign->status, ['draft', 'scheduled']))
                     <div class="mt-4 pt-4 border-t border-gray-200">
                         <button onclick="executeCampaign({{ $campaign->id }})" 
-                                class="w-full btn-primary">
+                                class="w-full btn btn-primary">
                             Execute Now
                         </button>
                     </div>
@@ -147,7 +147,7 @@
             <h3 class="mt-2 text-sm font-medium text-gray-900">No campaigns</h3>
             <p class="mt-1 text-sm text-gray-500">Get started by creating a new campaign.</p>
             <div class="mt-6">
-                <button onclick="openCampaignModal()" class="btn-primary">
+                <button onclick="openCampaignModal()" class="btn btn-primary">
                     Create Campaign
                 </button>
             </div>
@@ -226,7 +226,7 @@
                 <button type="button" onclick="closeCampaignModal()" class="btn-secondary">
                     Cancel
                 </button>
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn btn-primary">
                     Save Campaign
                 </button>
             </div>

@@ -69,12 +69,12 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Name</label>
                     <input type="text" id="groupName" 
-                           class="mt-1 block w-full rounded-md border-gray-300" required>
+                           class="form-input" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Description</label>
                     <textarea id="groupDescription" 
-                            class="mt-1 block w-full rounded-md border-gray-300" rows="3"></textarea>
+                            class="form-input" rows="3"></textarea>
                 </div>
             </div>
             <div class="mt-5 flex justify-end space-x-2">
@@ -105,14 +105,14 @@
         <div class="mb-4">
             <input type="text" id="customerSearch" 
                    placeholder="Search customers..." 
-                   class="w-full rounded-md border-gray-300">
+                   class="form-input">
         </div>
         <div class="max-h-[400px] overflow-y-auto">
             <table class="min-w-full">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <input type="checkbox" id="selectAllCustomers" class="rounded">
+                            <input type="checkbox" id="selectAllCustomers" class="form-checkbox">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Name

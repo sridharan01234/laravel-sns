@@ -23,9 +23,9 @@ This application uses a consistent color palette system across all views. The co
 We've created standardized components that use these colors consistently:
 
 1. Buttons:
-   - `.btn-primary`
-   - `.btn-secondary`
-   - `.btn-accent`
+   - `.btn btn-primary`
+   - `.btn btn-secondary`
+   - `.btn btn-accent`
 
 2. Alerts:
    - `.alert-success`
