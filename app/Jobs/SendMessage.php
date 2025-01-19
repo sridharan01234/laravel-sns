@@ -255,7 +255,6 @@ class SendMessage implements ShouldQueue
             '{name}' => $customer->name ?? '',
             '{mobile}' => $customer->mobile ?? '',
             '{email}' => $customer->email ?? '',
-            // Add more variables as needed
         ];
 
         return str_replace(
