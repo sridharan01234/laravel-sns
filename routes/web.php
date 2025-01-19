@@ -35,11 +35,6 @@ Route::controller(MessageController::class)->group(function () {
     Route::post('messages/send', 'send')->name('messages.send');
 });
 
-// Campaign routes
-Route::resource('campaigns', CampaignController::class);
-Route::post('campaigns/{campaign}/execute', [CampaignController::class, 'execute'])
-    ->name('campaigns.execute');
-
 Route::resource('groups', GroupController::class);
 Route::post('groups/{group}/add-customers', [GroupController::class, 'addCustomers'])
     ->name('groups.add-customers');

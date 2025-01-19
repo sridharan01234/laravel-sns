@@ -7,6 +7,8 @@ const cssFiles = [
     'resources/css/custom.css',
     'resources/css/animations.css',
     'resources/css/theme.css',
+    'resources/css/colors.css',
+    'resources/css/components.css',
 ];
 
 const jsFiles = [

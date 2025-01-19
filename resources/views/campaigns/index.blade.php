@@ -4,8 +4,8 @@
 <div class="container mx-auto px-4 py-6">
     <!-- Header Section -->
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Campaign Management</h1>
-        <p class="mt-1 text-sm text-gray-600">Create and manage your SMS campaigns</p>
+        <h1 class="text-3xl font-bold text-secondary-900">Campaign Management</h1>
+        <p class="mt-1 text-sm text-secondary-600">Create and manage your SMS campaigns</p>
     </div>
 
     <!-- Action Buttons & Stats -->
@@ -21,7 +21,7 @@
         </button>
         <div class="flex items-center space-x-6">
             <div class="text-sm">
-                <span class="text-gray-500">Total Campaigns:</span>
+                <span class="text-secondary-500">Total Campaigns:</span>
                 <span class="font-semibold text-indigo-600 ml-1">{{ number_format($campaigns->count()) }}</span>
             </div>
         </div>
@@ -47,7 +47,7 @@
                     <div class="flex space-x-2">
                         @if(in_array($campaign->status, ['draft', 'scheduled']))
                             <button onclick="editCampaign({{ $campaign->id }})" 
-                                    class="text-indigo-600 hover:text-indigo-900 transition-colors duration-200">
+                                    class="text-primary-600 hover:text-primary-900 transition-colors duration-200">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -92,11 +92,11 @@
                     </div>
                 </div>
 
-                <p class="text-sm text-gray-600 mb-4">{{ $campaign->description ?? 'No description provided' }}</p>
+                <p class="text-sm text-secondary-600 mb-4">{{ $campaign->description ?? 'No description provided' }}</p>
 
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Template:</span>
+                        <span class="text-secondary-500">Template:</span>
                         <span class="font-medium text-gray-900">{{ $campaign->template?->name ?? 'None' }}</span>
                     </div>
                     <div class="flex justify-between">
@@ -299,7 +299,7 @@ async function saveCampaign(event) {
     };
 
     try {
-        const response = await fetch(`/campaigns${id ? `/${id}` : ''}`, {
+        const response = await fetch(`/api/campaigns${id ? `/${id}` : ''}`, {
             method: id ? 'PUT' : 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -321,7 +321,7 @@ async function saveCampaign(event) {
 // View Campaign Details
 async function viewCampaign(id) {
     try {
-        const response = await fetch(`/campaigns/${id}`, {
+        const response = await fetch(`/api/campaigns/${id}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -522,7 +522,7 @@ async function executeCampaign(id) {
     if (!confirm('Are you sure you want to execute this campaign now?')) return;
 
     try {
-        const response = await fetch(`/campaigns/${id}/execute`, {
+        const response = await fetch(`/api/campaigns/${id}/execute`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -544,8 +544,17 @@ async function executeCampaign(id) {
 // Edit Campaign
 async function editCampaign(id) {
     try {
-        const response = await fetch(`/campaigns/${id}`);
-        const campaign = await response.json();
+        const response = await fetch(`/api/campaigns/${id}`,
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            },
+        );
+        const res = await response.json();
+
+        campaign = res.data;
 
         document.getElementById('modalTitle').textContent = 'Edit Campaign';
         document.getElementById('campaignId').value = campaign.id;

@@ -66,7 +66,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Sent Messages</p>
+                    <p class="text-sm font-medium text-secondary-600">Sent Messages</p>
                     <p class="text-2xl font-bold text-green-600">{{ number_format($stats->sent ?? 0) }}</p>
                 </div>
             </div>
@@ -105,10 +105,10 @@
     <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-secondary-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Recipient</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Campaign</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent At</th>
@@ -140,7 +140,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm font-medium">
                             <button onclick="viewMessage({{ $message->id }})" 
-                                    class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                    class="text-primary-600 hover:text-indigo-900 mr-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

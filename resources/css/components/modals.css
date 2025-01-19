@@ -1,0 +1,28 @@
+/* Modal styles using color palette */
+.modal-overlay {
+    @apply fixed inset-0 bg-secondary-900 bg-opacity-50;
+}
+
+.modal-container {
+    @apply relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white;
+}
+
+.modal-header {
+    @apply flex justify-between items-center mb-4;
+}
+
+.modal-title {
+    @apply text-lg font-semibold text-secondary-900;
+}
+
+.modal-close-button {
+    @apply text-secondary-400 hover:text-secondary-500 transition-colors duration-200;
+}
+
+.modal-form-group {
+    @apply space-y-4;
+}
+
+.modal-footer {
+    @apply flex justify-end space-x-3 pt-4 border-t border-secondary-200;
+}

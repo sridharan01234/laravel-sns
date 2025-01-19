@@ -4,8 +4,8 @@
 <div class="container mx-auto px-4 py-6">
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">SMS Campaign Dashboard</h1>
-    <p class="mt-1 text-sm text-gray-600">Real-time overview of your messaging campaigns and performance</p>
+    <h1 class="text-3xl font-bold text-secondary-900">SMS Campaign Dashboard</h1>
+    <p class="mt-1 text-sm text-secondary-600">Real-time overview of your messaging campaigns and performance</p>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

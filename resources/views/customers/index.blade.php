@@ -4,8 +4,8 @@
 <div class="container mx-auto px-4 py-6">
     <!-- Header Section -->
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Customer Management</h1>
-        <p class="mt-1 text-sm text-gray-600">Manage and organize your customer database</p>
+        <h1 class="text-3xl font-bold text-secondary-900">Customer Management</h1>
+        <p class="mt-1 text-sm text-secondary-600">Manage and organize your customer database</p>
     </div>
 
     <!-- Action Buttons -->
@@ -106,7 +106,7 @@
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
-                        <tr class="bg-gray-50">
+                        <tr class="bg-secondary-50">
                             <th class="px-6 py-3 text-left">
                                 <div class="flex items-center">
                                     <input type="checkbox" id="selectAll" 

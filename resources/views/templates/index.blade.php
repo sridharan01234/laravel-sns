@@ -5,7 +5,7 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Message Templates</h1>
         <button onclick="openTemplateModal()" 
-                class="bg-blue-500 text-white px-4 py-2 rounded">
+                class="bg-primary-500 text-white px-4 py-2 rounded">
             Create Template
         </button>
     </div>
@@ -23,7 +23,7 @@
                 </div>
                 <div class="flex space-x-2">
                     <button onclick="editTemplate({{ $template->id }})" 
-                            class="text-blue-500 hover:text-blue-700">
+                            class="text-primary-500 hover:text-blue-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -77,7 +77,7 @@
     <div class="relative top-20 mx-auto p-5 border w-[800px] shadow-lg rounded-md bg-white">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium" id="modalTitle">Create Template</h3>
-            <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-gray-500">
+            <button onclick="closeTemplateModal()" class="text-secondary-400 hover:text-secondary-500">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -286,7 +286,7 @@ function previewTemplate(id) {
             const variablesContainer = document.getElementById('previewVariables');
             variablesContainer.innerHTML = template.variables.map(variable => `
                 <div>
-                    <label class="block text-sm text-gray-600">${variable}</label>
+                    <label class="block text-sm text-secondary-600">${variable}</label>
                     <input type="text" 
                            class="preview-variable mt-1 block w-full rounded-md border-gray-300" 
                            data-variable="${variable}" 

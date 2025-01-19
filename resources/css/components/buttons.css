@@ -1,0 +1,25 @@
+/* Action buttons */
+.btn-success {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+}
+
+.btn-warning {
+    @apply bg-accent-600 text-white hover:bg-accent-700 focus:ring-accent-500;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+}
+
+/* Modal buttons */
+.modal-close {
+    @apply text-secondary-400 hover:text-secondary-500;
+}
+
+.modal-confirm {
+    @apply text-white bg-primary-600 hover:bg-primary-700;
+}
+
+.modal-cancel {
+    @apply text-secondary-700 bg-secondary-100 hover:bg-secondary-200;
+}

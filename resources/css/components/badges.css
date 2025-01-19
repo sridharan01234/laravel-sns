@@ -1,0 +1,29 @@
+/* Status badges */
+.badge-success {
+    @apply bg-primary-100 text-primary-800;
+}
+
+.badge-warning {
+    @apply bg-accent-100 text-accent-800;
+}
+
+.badge-error {
+    @apply bg-red-100 text-red-800;
+}
+
+.badge-info {
+    @apply bg-secondary-100 text-secondary-800;
+}
+
+/* Status indicators */
+.status-active {
+    @apply bg-primary-100 text-primary-800;
+}
+
+.status-inactive {
+    @apply bg-secondary-100 text-secondary-800;
+}
+
+.status-pending {
+    @apply bg-accent-100 text-accent-800;
+}
