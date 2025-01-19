@@ -363,7 +363,7 @@ async function duplicateCampaign(campaignId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
             }
         });
 
@@ -407,7 +407,7 @@ async function resendCampaign(campaignId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
             }
         });
 

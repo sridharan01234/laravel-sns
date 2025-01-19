@@ -69,3 +69,26 @@ Route::get('/', [DashboardController::class, 'index'])->name('home');
                     Route::post('templates/{template}/toggle-status', [TemplateController::class, 'toggleStatus'])
                         ->name('templates.toggle-status');
             
+                        Route::prefix('api')->group(function () {
+                            // Customer API endpoints
+                            Route::apiResource('customers', CustomerController::class);
+                            Route::controller(CustomerController::class)->group(function () {
+                                Route::post('customers/bulk-delete', 'bulkDelete');
+                                Route::post('customers/import', 'import');
+                            });
+                        
+                            // Group API endpoints
+                            Route::apiResource('groups', GroupController::class);
+                        
+                            // Campaign API endpoints
+                            Route::post('campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate']);
+                            Route::post('campaigns/{campaign}/resend', [CampaignController::class, 'resend']);
+                            Route::post('campaigns/{campaign}/execute', [CampaignController::class, 'execute']);
+                            Route::apiResource('campaigns', CampaignController::class);
+                        
+                            // Message API endpoints
+                            Route::controller(MessageController::class)->group(function () {
+                                Route::get('messages', 'index');
+                                Route::post('messages/send', 'send');
+                            });
+                        });

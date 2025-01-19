@@ -150,6 +150,7 @@ class CampaignController extends Controller
 
     public function duplicate(Campaign $campaign)
 {
+    
     $newCampaign = $campaign->replicate();
     $newCampaign->name = $campaign->name . ' (Copy)';
     $newCampaign->status = 'draft';

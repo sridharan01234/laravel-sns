@@ -9,256 +9,223 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use App\Models\Campaign;
-use App\Models\Template;
-use App\Models\Customer;
 use Aws\Sns\SnsClient;
+use Illuminate\Support\Facades\Http;
 
 class SendMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $message;
-    protected $sns;
-    protected $topicArn;
 
-    public function __construct(Message $message)
+    protected $message;
+    protected $provider;
+
+    public function __construct(Message $message, $provider = 'aws')
     {
         $this->message = $message;
+        $this->provider = $provider;
     }
 
     public function handle()
     {
-        $this->sns = new SnsClient([
+        try {
+            $this->message->load(['customer', 'campaign.template']);
+            
+            $customer = $this->message->customer;
+            $template = $this->message->campaign->template;
+
+            if (!$customer || !$template) {
+                throw new \Exception('Missing required data: customer or template not found');
+            }
+
+            $formattedPhone = $this->formatPhoneNumber($customer->mobile);
+            $messageText = $this->prepareMessageText($template->content, $customer);
+
+            // Send based on provider
+            $result = $this->provider === 'aws' 
+                ? $this->sendViaSNS($formattedPhone, $messageText)
+                : $this->sendVia2Factor($formattedPhone, $messageText);
+
+            $this->updateMessageStatus('sent', $result);
+            
+        } catch (\Exception $e) {
+            $this->handleError($e);
+            throw $e;
+        }
+    }
+
+    protected function handleError($exception)
+    {
+        $this->message->update([
+            'status' => 'failed',
+            'response' => [
+                'error' => $exception->getMessage()
+            ]
+        ]);
+
+        Log::error('Message sending failed', [
+            'message_id' => $this->message->id,
+            'error' => $exception->getMessage()
+        ]);
+    }
+
+    protected function sendViaSNS($phone, $message)
+    {
+        $sns = new SnsClient([
             'version' => 'latest',
             'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
             'credentials' => [
                 'key'    => env('AWS_ACCESS_KEY_ID'),
                 'secret' => env('AWS_SECRET_ACCESS_KEY'),
             ],
-            'http' => [
-                'verify' => false
+            'http' => ['verify' => false]
+        ]);
+
+        $result = $sns->publish([
+            'Message' => $message,
+            'PhoneNumber' => $phone,
+            'MessageAttributes' => [
+                'AWS.SNS.SMS.SMSType' => [
+                    'DataType' => 'String',
+                    'StringValue' => 'Transactional'
+                ]
             ]
         ]);
 
-        try {
-            // Create or get existing topic
-            $topicArn = $this->createOrGetTopic();
-
-            // Get campaign and template data
-            $campaign = Campaign::findOrFail($this->message->campaign_id);
-            $template = Template::findOrFail($campaign->template_id);
-            $customer = Customer::findOrFail($this->message->customer_id);
-
-            // Subscribe customer to topic
-            $this->subscribeToTopic($topicArn, $customer->mobile);
-
-            // Prepare and send message
-            $variables = $this->prepareMessageVariables($customer, $template);
-            $messageText = $this->formatMessage($template, $variables);
-
-            $response = $this->publishToTopic($topicArn, $messageText);
-
-            // Update message status
-            $this->message->update([
-                'status' => 'sent',
-                'variables' => $variables,
-                'response' => $response,
-                'sent_at' => now()
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('SMS Campaign Failed', [
-                'message_id' => $this->message->id,
-                'error' => $e->getMessage()
-            ]);
-
-            $this->message->update([
-                'status' => 'failed',
-                'response' => ['error' => $e->getMessage()]
-            ]);
-
-            throw $e;
-        }
+        return [
+            'provider' => 'aws',
+            'message_id' => $result['MessageId'] ?? null,
+        ];
     }
 
-    protected function createOrGetTopic()
+    protected function sendVia2Factor($phone, $message)
     {
-        try {
-            // Create unique topic name based on campaign
-            $topicName = 'campaign-' . $this->message->campaign_id;
-
-            $result = $this->sns->createTopic([
-                'Name' => $topicName,
-                'Tags' => [
-                    [
-                        'Key' => 'campaign_id',
-                        'Value' => (string)$this->message->campaign_id
-                    ]
-                ]
-            ]);
-
-            Log::info('SNS Topic Created', [
-                'topic_arn' => $result['TopicArn'],
-                'campaign_id' => $this->message->campaign_id
-            ]);
-
-            return $result['TopicArn'];
-
-        } catch (\Exception $e) {
-            Log::error('Failed to create SNS topic', [
-                'campaign_id' => $this->message->campaign_id,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
+        $apiUrl = 'https://2factor.in/API/R1/';
+        
+        $formattedPhone = ltrim($phone, '+');
+        if (!str_starts_with($formattedPhone, '91')) {
+            $formattedPhone = '91' . ltrim($formattedPhone, '0');
         }
-    }
-
-    protected function subscribeToTopic($topicArn, $phoneNumber)
-    {
+    
+        $formData = [
+            'module' => 'TRANS_SMS',
+            'apikey' => env('TWO_FACTOR_API_KEY'),
+            'to' => $formattedPhone,
+            'from' => env('TWO_FACTOR_SENDER_ID'),
+            'msg' => $message
+        ];
+    
+        Log::debug('Attempting 2Factor API request', [
+            'url' => $apiUrl,
+            'payload' => array_merge(
+                $formData,
+                ['msg' => substr($message, 0, 30) . '...']
+            )
+        ]);
+    
         try {
-            $formattedPhoneNumber = $this->formatPhoneNumber($phoneNumber);
-
-            $result = $this->sns->subscribe([
-                'TopicArn' => $topicArn,
-                'Protocol' => 'sms',
-                'Endpoint' => $formattedPhoneNumber,
-                'ReturnSubscriptionArn' => true
+            // Added withOptions to handle SSL verification
+            $response = Http::withOptions([
+                'verify' => false  // Disable SSL verification - Use only in development
+            ])
+            ->asForm()
+            ->withHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])
+            ->post($apiUrl, $formData);
+    
+            Log::debug('2Factor API raw response', [
+                'status_code' => $response->status(),
+                'headers' => $response->headers(),
+                'body' => $response->body()
             ]);
-
-            Log::info('Phone Subscribed to Topic', [
-                'phone' => $formattedPhoneNumber,
-                'topic_arn' => $topicArn,
-                'subscription_arn' => $result['SubscriptionArn']
-            ]);
-
-            return $result['SubscriptionArn'];
-
-        } catch (\Exception $e) {
-            Log::error('Failed to subscribe to topic', [
-                'phone' => $phoneNumber,
-                'topic_arn' => $topicArn,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
-    }
-
-    protected function publishToTopic($topicArn, $messageText)
-    {
-        try {
-            $result = $this->sns->publish([
-                'TopicArn' => $topicArn,
-                'Message' => $messageText,
-                'MessageAttributes' => [
-                    'SMSType' => [
-                        'DataType' => 'String',
-                        'StringValue' => 'Transactional'
-                    ]
-                ]
-            ]);
-
-            Log::info('Message Published to Topic', [
-                'topic_arn' => $topicArn,
-                'message_id' => $result['MessageId'],
-                'message_preview' => substr($messageText, 0, 50)
-            ]);
-
+    
+            $responseData = $response->json();
+    
+            if (!$response->successful() || ($responseData['Status'] ?? '') === 'Error') {
+                throw new \Exception('2Factor API error: ' . $response->body());
+            }
+    
             return [
-                'success' => true,
-                'message_id' => $result['MessageId'],
-                'sent_at' => now(),
-                'provider' => 'aws-sns-topic'
+                'provider' => '2factor',
+                'message_id' => $responseData['Details'] ?? null,
+                'status' => $responseData['Status'] ?? 'Unknown'
             ];
-
+    
         } catch (\Exception $e) {
-            Log::error('Failed to publish to topic', [
-                'topic_arn' => $topicArn,
-                'error' => $e->getMessage()
+            Log::error('2Factor API request failed', [
+                'error' => $e->getMessage(),
+                'url' => $apiUrl,
+                'payload' => array_merge(
+                    $formData,
+                    ['msg' => substr($message, 0, 30) . '...']
+                )
             ]);
+            
             throw $e;
         }
     }
+    
 
-    protected function formatPhoneNumber($phoneNumber)
+    protected function updateMessageStatus($status, $result)
+    {
+        $this->message->update([
+            'status' => $status,
+            'response' => [
+                'provider' => $result['provider'],
+                'message_id' => $result['message_id'],
+                'sent_at' => now()
+            ],
+            'sent_at' => now()
+        ]);
+
+        Log::info('Message sent successfully', [
+            'message_id' => $this->message->id,
+            'provider' => $result['provider'],
+            'provider_message_id' => $result['message_id']
+        ]);
+    }
+
+    protected function formatPhoneNumber($phone)
     {
         // Remove any non-numeric characters
-        $number = preg_replace('/[^0-9]/', '', $phoneNumber);
+        $number = preg_replace('/[^0-9]/', '', $phone);
         
-        // If number starts with 0, remove it
-        $number = ltrim($number, '0');
-        
-        // Add India country code (+91) if not present
+        // Add country code if not present
         if (strlen($number) === 10) {
             $number = '+91' . $number;
-        } else {
-            // If number doesn't have country code, add it
-            if (strpos($number, '91') !== 0) {
-                $number = '+91' . $number;
-            } else {
-                $number = '+' . $number;
-            }
+        } elseif (strlen($number) === 12 && substr($number, 0, 2) === '91') {
+            $number = '+' . $number;
         }
         
         return $number;
     }
 
-    protected function formatMessage($template, $variables)
-    {
-        $messageText = $template->content;
-        foreach ($variables as $key => $value) {
-            $messageText = str_replace('{' . $key . '}', $value, $messageText);
-        }
-        return $messageText;
-    }
-
-    protected function prepareMessageVariables($customer, $template)
+    protected function prepareMessageText($template, $customer)
     {
         $variables = [
-            'customer_name' => $customer->name,
-            'mobile' => $customer->mobile,
+            '{name}' => $customer->name ?? '',
+            '{mobile}' => $customer->mobile ?? '',
+            '{email}' => $customer->email ?? '',
+            // Add more variables as needed
         ];
 
-        // Add plan-related variables if available
-        if ($customer->plan_id) {
-            $plan = Plan::where('id', $customer->plan_id)->first();
-            if ($plan) {
-                $variables = array_merge($variables, [
-                    'plan_name' => $plan->name,
-                    'amount' => $plan->amount,
-                    'expiry_date' => $customer->plan_expiry?->format('d M, Y'),
-                    'remaining_days' => now()->diffInDays($customer->plan_expiry, false)
-                ]);
-            }
-        }
-
-        // Add any custom variables from the template
-        if($template->variables) {
-            foreach ($template->variables as $variable) {
-                if (!isset($variables[$variable])) {
-                    $variables[$variable] = ''; // Set default empty value for undefined variables
-                }
-            }
-        }
-
-        return $variables;
+        return str_replace(
+            array_keys($variables),
+            array_values($variables),
+            $template
+        );
     }
 
     public function failed(\Throwable $exception)
     {
-        Log::error('Message Job Failed: ' . $exception->getMessage(), [
+        Log::error('Message Job Failed', [
             'message_id' => $this->message->id,
-            'customer_id' => $this->message->customer_id ?? null,
-            'campaign_id' => $this->message->campaign_id ?? null,
-            'error' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString()
+            'error' => $exception->getMessage()
         ]);
 
         $this->message->update([
             'status' => 'failed',
-            'response' => [
-                'error' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString()
-            ]
+            'response' => ['error' => $exception->getMessage()]
         ]);
     }
 }

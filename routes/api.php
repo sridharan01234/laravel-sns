@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CampaignController;
 |--------------------------------------------------------------------------
 */
 
+Route::prefix('api')->group(function () {
     // Customer API endpoints
     Route::apiResource('customers', CustomerController::class);
     Route::controller(CustomerController::class)->group(function () {
@@ -24,17 +25,14 @@ use App\Http\Controllers\Api\CampaignController;
     Route::apiResource('groups', GroupController::class);
 
     // Campaign API endpoints
-    Route::apiResource('campaigns', CampaignController::class);
+    Route::post('campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate']);
+    Route::post('campaigns/{campaign}/resend', [CampaignController::class, 'resend']);
     Route::post('campaigns/{campaign}/execute', [CampaignController::class, 'execute']);
+    Route::apiResource('campaigns', CampaignController::class);
 
     // Message API endpoints
     Route::controller(MessageController::class)->group(function () {
         Route::get('messages', 'index');
         Route::post('messages/send', 'send');
     });
-
-    Route::get('/customers', [CustomerController::class, 'apiIndex']);
-
-    Route::post('/campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate']);
-Route::post('/campaigns/{campaign}/resend', [CampaignController::class, 'resend']);
-
+});
